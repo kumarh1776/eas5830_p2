@@ -27,20 +27,18 @@ contract Destination is AccessControl {
 		BridgeToken bridgeToken = BridgeToken(underlying_tokens[_underlying_token]);
 		bridgeToken.mint(_recipient, _amount);
 		emit Wrap(_underlying_token, address(bridgeToken), _recipient, _amount);
-   
 	}
 
 	function unwrap(address _wrapped_token, address _recipient, uint256 _amount ) public {
 		BridgeToken bridgeToken = BridgeToken(_wrapped_token);
 		require(bridgeToken.balanceOf(msg.sender) >= _amount, "Insufficient balance");
-		bridgeToken.burn(msg.sender, _amount);
+		bridgeToken.burnFrom(msg.sender, _amount);
 		emit Unwrap(bridgeToken.underlying(), _wrapped_token, msg.sender, _recipient, _amount);
-
 	}
 
 	function createToken(address _underlying_token, string memory name, string memory symbol ) public onlyRole(CREATOR_ROLE) returns(address) {
 		require(underlying_tokens[_underlying_token] == address(0), "Token already exists");
-		BridgeToken bridgeToken = new BridgeToken(name, symbol, _underlying_token);
+		BridgeToken bridgeToken = new BridgeToken(_underlying_token, name, symbol, msg.sender);
 		underlying_tokens[_underlying_token] = address(bridgeToken);
 		wrapped_tokens[address(bridgeToken)] = _underlying_token;
 		tokens.push(address(bridgeToken));
